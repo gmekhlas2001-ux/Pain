@@ -110,6 +110,92 @@ function MainApp() {
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [prevUser, setPrevUser] = useState<typeof user | null>(null);
 
+  // Define all callbacks first before using them in effects
+  const fetchStars = useCallback(async () => {
+    if (!isConnected) return;
+
+    try {
+      let query = supabase
+        .from('stars')
+        .select(`
+          *,
+          profiles (
+            username,
+            display_name,
+            hide_display_name
+          )
+        `);
+
+      if (currentSky === 'general') {
+        query = query.eq('sky_type', 'general');
+      } else if (currentSky === 'user' && user) {
+        const targetUserId = viewingUserId || user.id;
+        query = query.eq('sky_type', 'user').eq('profile_id', targetUserId);
+      }
+
+      const { data, error: fetchError } = await query
+        .order('created_at', { ascending: false });
+
+      if (fetchError) {
+        if (fetchError.code === '42P01') {
+          setStars([]);
+          setError('Database tables not yet configured. Please run migrations.');
+          return;
+        }
+
+        setError('Failed to load stars. Please try again.');
+        return;
+      }
+
+      setStars(data || []);
+      setError(null);
+    } catch {
+      setError('Failed to load stars. Please try again.');
+    }
+  }, [isConnected, currentSky, user, viewingUserId]);
+
+  const checkProfileCompletion = useCallback(async () => {
+    if (!user || !isConnected) return;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setUserProfile(profile);
+      if (!profile) {
+        setShowProfileModal(true);
+      }
+    } catch {
+      setError('Failed to load profile. Please try again.');
+    }
+  }, [user, isConnected]);
+
+  const checkAdminStatus = useCallback(async () => {
+    if (!user || !isConnected) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (error) {
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(!!data);
+    } catch {
+      setIsAdmin(false);
+    }
+  }, [user, isConnected]);
+
   useEffect(() => {
     if (prevUser && !user) {
       setCurrentSky('general');
@@ -161,91 +247,6 @@ function MainApp() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isConnected]);
-
-  const checkProfileCompletion = useCallback(async () => {
-    if (!user || !isConnected) return;
-
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      setUserProfile(profile);
-      if (!profile) {
-        setShowProfileModal(true);
-      }
-    } catch {
-      setError('Failed to load profile. Please try again.');
-    }
-  }, [user, isConnected]);
-
-  const checkAdminStatus = useCallback(async () => {
-    if (!user || !isConnected) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      if (error) {
-        setIsAdmin(false);
-        return;
-      }
-
-      setIsAdmin(!!data);
-    } catch {
-      setIsAdmin(false);
-    }
-  }, [user, isConnected]);
-
-  const fetchStars = useCallback(async () => {
-    if (!isConnected) return;
-
-    try {
-      let query = supabase
-        .from('stars')
-        .select(`
-          *,
-          profiles (
-            username,
-            display_name,
-            hide_display_name
-          )
-        `);
-
-      if (currentSky === 'general') {
-        query = query.eq('sky_type', 'general');
-      } else if (currentSky === 'user' && user) {
-        const targetUserId = viewingUserId || user.id;
-        query = query.eq('sky_type', 'user').eq('profile_id', targetUserId);
-      }
-
-      const { data, error: fetchError } = await query
-        .order('created_at', { ascending: false });
-
-      if (fetchError) {
-        if (fetchError.code === '42P01') {
-          setStars([]);
-          setError('Database tables not yet configured. Please run migrations.');
-          return;
-        }
-
-        setError('Failed to load stars. Please try again.');
-        return;
-      }
-
-      setStars(data || []);
-      setError(null);
-    } catch {
-      setError('Failed to load stars. Please try again.');
-    }
-  }, [isConnected, currentSky, user, viewingUserId]);
 
   useEffect(() => {
     if (!isConnected || !user) {
