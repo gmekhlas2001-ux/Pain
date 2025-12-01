@@ -1,5 +1,5 @@
-import React from 'react';
-import { MotionValue } from 'framer-motion';
+import React, { useMemo } from 'react';
+import { motion, useTransform, MotionValue } from 'framer-motion';
 
 interface SkySegmentProps {
   segment: number;
@@ -7,148 +7,256 @@ interface SkySegmentProps {
   SKY_CIRCUMFERENCE: number;
 }
 
+const seededRandom = (seed: number) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+};
+
 export const SkySegment: React.FC<SkySegmentProps> = ({
   segment,
   normalizedOffset,
   SKY_CIRCUMFERENCE
 }) => {
+  const bgStarsTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.2
+  );
+
+  const largeStarsTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.3
+  );
+
+  const clusterTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.4
+  );
+
+  const nebulaTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.6
+  );
+
+  const milkyWayTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.1
+  );
+
+  const bgStars = useMemo(() => {
+    return Array.from({ length: 300 }).map((_, i) => {
+      const seed = segment * 1000 + i;
+      const size = seededRandom(seed) * 2 + 0.5;
+      const opacity = seededRandom(seed + 0.1) * 0.8 + 0.2;
+      const left = seededRandom(seed + 0.2) * 100;
+      const top = seededRandom(seed + 0.3) * 100;
+
+      return {
+        key: `bg-star-${segment}-${i}`,
+        size,
+        opacity,
+        left,
+        top
+      };
+    });
+  }, [segment]);
+
+  const largeStars = useMemo(() => {
+    return Array.from({ length: 40 }).map((_, i) => {
+      const seed = segment * 2000 + i;
+      const size = seededRandom(seed) * 3 + 2;
+      const opacity = seededRandom(seed + 0.1) * 0.6 + 0.4;
+      const left = seededRandom(seed + 0.2) * 100;
+      const top = seededRandom(seed + 0.3) * 100;
+
+      return {
+        key: `large-star-${segment}-${i}`,
+        size,
+        opacity,
+        left,
+        top
+      };
+    });
+  }, [segment]);
+
+  const clusters = useMemo(() => {
+    return Array.from({ length: 15 }).map((_, i) => {
+      const seed = segment * 3000 + i;
+      const clusterX = seededRandom(seed) * 80 + 10;
+      const clusterY = seededRandom(seed + 0.1) * 80 + 10;
+      const starCount = Math.floor(seededRandom(seed + 0.2) * 5) + 3;
+
+      const stars = Array.from({ length: starCount }).map((_, j) => {
+        const starSeed = seed + 100 + j;
+        const offsetX = (seededRandom(starSeed) - 0.5) * 10;
+        const offsetY = (seededRandom(starSeed + 0.1) - 0.5) * 10;
+        const size = seededRandom(starSeed + 0.2) * 1.5 + 1;
+
+        return {
+          key: `cluster-star-${segment}-${i}-${j}`,
+          left: clusterX + offsetX,
+          top: clusterY + offsetY,
+          size
+        };
+      });
+
+      return {
+        key: `cluster-${segment}-${i}`,
+        stars
+      };
+    });
+  }, [segment]);
+
+  const nebulas = useMemo(() => {
+    return Array.from({ length: 3 }).map((_, i) => {
+      const seed = segment * 4000 + i;
+      const left = seededRandom(seed) * 60 + 20;
+      const top = seededRandom(seed + 0.1) * 60 + 20;
+      const width = seededRandom(seed + 0.2) * 200 + 100;
+      const height = seededRandom(seed + 0.3) * 200 + 100;
+      const isBlue = seededRandom(seed + 0.4) > 0.5;
+
+      return {
+        key: `nebula-${segment}-${i}`,
+        left,
+        top,
+        width,
+        height,
+        color: isBlue ? '100, 150, 255' : '255, 150, 100'
+      };
+    });
+  }, [segment]);
+
   return (
     <>
       {/* Static background stars */}
-      <div
+      <motion.div
         className="absolute inset-0"
         style={{
-          left: 0,
+          left: `${segment * 100 - 100}%`,
           width: '100%',
+          willChange: 'transform',
+          x: bgStarsTransform
         }}
       >
-        {Array.from({ length: 300 }).map((_, i) => {
-          const size = Math.random() * 2 + 0.5;
-          const opacity = Math.random() * 0.8 + 0.2;
-          return (
+        {bgStars.map((star) => (
             <div
-              key={`bg-star-${segment}-${i}`}
+              key={star.key}
               className="absolute bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${size}px`,
-                height: `${size}px`,
-                opacity: opacity,
-                boxShadow: `0 0 ${size * 2}px rgba(255, 255, 255, ${opacity * 0.5})`,
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, ${star.opacity * 0.5})`,
               }}
             />
-          );
-        })}
-      </div>
+          ))}
+      </motion.div>
 
       {/* Larger background stars */}
-      <div
+      <motion.div
         className="absolute inset-0"
         style={{
-          left: 0,
+          left: `${segment * 100 - 100}%`,
           width: '100%',
+          willChange: 'transform',
+          x: largeStarsTransform
         }}
       >
-        {Array.from({ length: 40 }).map((_, i) => {
-          const size = Math.random() * 3 + 2;
-          const opacity = Math.random() * 0.6 + 0.4;
-          return (
+        {largeStars.map((star) => (
             <div
-              key={`large-star-${segment}-${i}`}
+              key={star.key}
               className="absolute bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${size}px`,
-                height: `${size}px`,
-                opacity: opacity,
-                boxShadow: `0 0 ${size * 3}px rgba(255, 255, 255, ${opacity * 0.7})`,
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                boxShadow: `0 0 ${star.size * 3}px rgba(255, 255, 255, ${star.opacity * 0.7})`,
               }}
             />
-          );
-        })}
-      </div>
+          ))}
+      </motion.div>
 
       {/* Constellation-like star clusters */}
-      <div
+      <motion.div
         className="absolute inset-0"
         style={{
-          left: 0,
+          left: `${segment * 100 - 100}%`,
           width: '100%',
+          willChange: 'transform',
+          x: clusterTransform
         }}
       >
-        {Array.from({ length: 15 }).map((_, i) => {
-          const clusterX = Math.random() * 80 + 10;
-          const clusterY = Math.random() * 80 + 10;
-          return (
-            <div key={`cluster-${segment}-${i}`} className="absolute">
-              {Array.from({ length: Math.floor(Math.random() * 5) + 3 }).map((_, j) => {
-                const offsetX = (Math.random() - 0.5) * 10;
-                const offsetY = (Math.random() - 0.5) * 10;
-                const size = Math.random() * 1.5 + 1;
-                return (
+        {clusters.map((cluster) => (
+            <div key={cluster.key} className="absolute">
+              {cluster.stars.map((star) => (
                   <div
-                    key={`cluster-star-${segment}-${i}-${j}`}
+                    key={star.key}
                     className="absolute bg-white rounded-full"
                     style={{
-                      left: `${clusterX + offsetX}%`,
-                      top: `${clusterY + offsetY}%`,
-                      width: `${size}px`,
-                      height: `${size}px`,
+                      left: `${star.left}%`,
+                      top: `${star.top}%`,
+                      width: `${star.size}px`,
+                      height: `${star.size}px`,
                       opacity: 0.8,
-                      boxShadow: `0 0 ${size * 2}px rgba(255, 255, 255, 0.6)`,
+                      boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, 0.6)`,
                     }}
                   />
-                );
-              })}
+                ))}
             </div>
-          );
-        })}
-      </div>
+          ))}
+      </motion.div>
 
       {/* Nebula-like clouds */}
-      <div
+      <motion.div
         className="absolute inset-0"
         style={{
-          left: 0,
+          left: `${segment * 100 - 100}%`,
           width: '100%',
+          willChange: 'transform',
+          x: nebulaTransform
         }}
       >
-        {Array.from({ length: 3 }).map((_, i) => (
+        {nebulas.map((nebula) => (
           <div
-            key={`nebula-${segment}-${i}`}
+            key={nebula.key}
             className="absolute rounded-full opacity-10"
             style={{
-              left: `${Math.random() * 60 + 20}%`,
-              top: `${Math.random() * 60 + 20}%`,
-              width: `${Math.random() * 200 + 100}px`,
-              height: `${Math.random() * 200 + 100}px`,
-              background: `radial-gradient(circle, rgba(${Math.random() > 0.5 ? '100, 150, 255' : '255, 150, 100'}, 0.3) 0%, transparent 70%)`,
+              left: `${nebula.left}%`,
+              top: `${nebula.top}%`,
+              width: `${nebula.width}px`,
+              height: `${nebula.height}px`,
+              background: `radial-gradient(circle, rgba(${nebula.color}, 0.3) 0%, transparent 70%)`,
               filter: 'blur(20px)',
             }}
           />
         ))}
-      </div>
+      </motion.div>
 
       {/* Milky Way band */}
-      <div
+      <motion.div
         className="absolute inset-0 opacity-15"
         style={{
-          left: 0,
+          left: `${segment * 100 - 100}%`,
           width: '100%',
           background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 70%)',
-          transform: 'rotate(-15deg)',
+          rotate: '-15deg',
+          willChange: 'transform',
+          x: milkyWayTransform
         }}
       />
 
-      {/* Moon - only show in first segment */}
-      {segment === 0 && (
-      <div
+      {/* Moon */}
+      <motion.div
         className="absolute w-24 h-24"
         style={{
           right: '10%',
           top: '10%',
+          left: segment === 0 ? '80%' : '-200%',
+          willChange: 'transform'
         }}
       >
         <div className="relative w-full h-full">
@@ -304,8 +412,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             ))}
           </div>
         </div>
-      </div>
-      )}
+      </motion.div>
     </>
   );
 };

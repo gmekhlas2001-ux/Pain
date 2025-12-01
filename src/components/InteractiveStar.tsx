@@ -19,13 +19,23 @@ export const InteractiveStar: React.FC<InteractiveStarProps> = ({
   hoveredStar,
   setHoveredStar,
 }) => {
+  const starTransform = useTransform(
+    normalizedOffset,
+    (value) => value * 0.4
+  );
+
   return (
     <motion.div
       className="absolute cursor-pointer interactive-star"
-      style={{
+      initial={{
         left: `${star.x}%`,
         top: `${star.y}%`,
-        transform: 'translate(-50%, -50%)',
+        x: "-50%",
+        y: "-50%"
+      }}
+      style={{
+        x: starTransform,
+        willChange: 'transform',
         zIndex: hoveredStar === star.id ? 10 : 1,
       }}
       onClick={(e) => {
