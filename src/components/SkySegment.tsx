@@ -130,7 +130,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
       <motion.div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           willChange: 'transform',
           x: bgStarsTransform
@@ -156,7 +156,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
       <motion.div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           willChange: 'transform',
           x: largeStarsTransform
@@ -182,7 +182,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
       <motion.div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           willChange: 'transform',
           x: clusterTransform
@@ -212,7 +212,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
       <motion.div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           willChange: 'transform',
           x: nebulaTransform
@@ -238,179 +238,62 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
       <motion.div
         className="absolute inset-0 opacity-15"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 70%)',
-          rotate: '-15deg',
+          transform: 'rotate(-15deg)',
           willChange: 'transform',
           x: milkyWayTransform
         }}
       />
 
-      {/* Moon */}
-      <motion.div
-        className="absolute w-24 h-24"
+      {segment === 0 && (
+      <div
+        className="absolute w-32 h-32"
         style={{
-          right: '10%',
-          top: '10%',
-          left: segment === 0 ? '80%' : '-200%',
-          willChange: 'transform'
+          right: '15%',
+          top: '12%',
         }}
       >
         <div className="relative w-full h-full">
           <div
-            className="absolute w-full h-full rounded-full opacity-30"
+            className="absolute w-full h-full rounded-full"
             style={{
-              background: 'radial-gradient(circle, rgba(220, 220, 255, 0.4) 0%, rgba(180, 180, 220, 0.2) 40%, transparent 70%)',
-              transform: 'scale(1.8)',
-              filter: 'blur(8px)',
+              background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(220, 220, 255, 0.2) 40%, transparent 70%)',
+              transform: 'scale(2)',
+              filter: 'blur(20px)',
             }}
           />
-          
-          <div
-            className="w-full h-full rounded-full"
-            style={{
-              background: `
-                radial-gradient(ellipse at 30% 25%, rgba(255, 255, 255, 0.9) 0%, transparent 25%),
-                radial-gradient(ellipse at 65% 40%, rgba(240, 240, 240, 0.6) 0%, transparent 20%),
-                radial-gradient(ellipse at 45% 70%, rgba(220, 220, 220, 0.4) 0%, transparent 15%),
-                radial-gradient(ellipse at 20% 60%, rgba(200, 200, 200, 0.3) 0%, transparent 12%),
-                radial-gradient(ellipse at 75% 25%, rgba(210, 210, 210, 0.3) 0%, transparent 10%),
-                radial-gradient(circle at 35% 30%, #f8f8f8 0%, #e8e8e8 25%, #d0d0d0 50%, #b8b8b8 75%, #a0a0a0 100%)
-              `,
-              boxShadow: `
-                0 0 20px rgba(245, 245, 255, 0.6),
-                0 0 40px rgba(220, 220, 255, 0.3),
-                inset -10px -10px 20px rgba(0, 0, 0, 0.3),
-                inset 5px 5px 15px rgba(255, 255, 255, 0.2)
-              `,
-            }}
-          >
-            <div className="absolute inset-0 rounded-full overflow-hidden">
-              {/* Large crater */}
-              <div
-                className="absolute rounded-full opacity-40"
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  left: '45%',
-                  top: '35%',
-                  background: 'radial-gradient(circle, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 40%, transparent 70%)',
-                  boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.3)',
-                }}
-              />
-              
-              {/* Medium craters */}
-              <div
-                className="absolute rounded-full opacity-30"
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  left: '25%',
-                  top: '50%',
-                  background: 'radial-gradient(circle, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, transparent 80%)',
-                  boxShadow: 'inset 1px 1px 3px rgba(0, 0, 0, 0.2)',
-                }}
-              />
-              
-              <div
-                className="absolute rounded-full opacity-25"
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  left: '65%',
-                  top: '60%',
-                  background: 'radial-gradient(circle, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, transparent 80%)',
-                  boxShadow: 'inset 1px 1px 2px rgba(0, 0, 0, 0.2)',
-                }}
-              />
-              
-              {/* Small craters */}
-              <div
-                className="absolute rounded-full opacity-20"
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  left: '35%',
-                  top: '65%',
-                  background: 'radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, transparent 70%)',
-                  boxShadow: 'inset 1px 1px 1px rgba(0, 0, 0, 0.1)',
-                }}
-              />
-              
-              <div
-                className="absolute rounded-full opacity-15"
-                style={{
-                  width: '4px',
-                  height: '4px',
-                  left: '55%',
-                  top: '25%',
-                  background: 'radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, transparent 70%)',
-                }}
-              />
-              
-              {/* Mare (dark patches) */}
-              <div
-                className="absolute opacity-20"
-                style={{
-                  width: '20px',
-                  height: '15px',
-                  left: '20%',
-                  top: '25%',
-                  background: 'radial-gradient(ellipse, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 60%, transparent 100%)',
-                  borderRadius: '60% 40% 70% 30%',
-                  transform: 'rotate(-15deg)',
-                }}
-              />
-              
-              <div
-                className="absolute opacity-15"
-                style={{
-                  width: '16px',
-                  height: '12px',
-                  left: '50%',
-                  top: '45%',
-                  background: 'radial-gradient(ellipse, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 70%, transparent 100%)',
-                  borderRadius: '50% 60% 40% 70%',
-                  transform: 'rotate(25deg)',
-                }}
-              />
-              
-              {/* Bright highlands */}
-              <div
-                className="absolute opacity-30"
-                style={{
-                  width: '14px',
-                  height: '10px',
-                  left: '60%',
-                  top: '20%',
-                  background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 60%, transparent 100%)',
-                  borderRadius: '70% 30% 60% 40%',
-                  transform: 'rotate(45deg)',
-                }}
-              />
-            </div>
-          </div>
-          
-          <div className="absolute inset-0">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={`moon-ray-${i}`}
-                className="absolute opacity-10"
-                style={{
-                  width: '1px',
-                  height: '60px',
-                  background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.3) 0%, transparent 100%)',
-                  left: '50%',
-                  top: '50%',
-                  transformOrigin: '0 0',
-                  transform: `translate(-50%, -50%) rotate(${i * 45}deg)`,
-                }}
-              />
-            ))}
-          </div>
+
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <defs>
+              <radialGradient id="moonGlow" cx="50%" cy="50%">
+                <stop offset="0%" style={{ stopColor: '#ffffff', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#e8e8e8', stopOpacity: 0.9 }} />
+              </radialGradient>
+              <filter id="moonBlur">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
+              </filter>
+            </defs>
+
+            <circle cx="50" cy="50" r="45" fill="url(#moonGlow)" filter="url(#moonBlur)" />
+
+            <ellipse
+              cx="70"
+              cy="50"
+              rx="40"
+              ry="45"
+              fill="#0a1628"
+              opacity="0.8"
+            />
+
+            <ellipse cx="35" cy="40" rx="4" ry="4" fill="rgba(0,0,0,0.2)" />
+            <ellipse cx="28" cy="55" rx="3" ry="3" fill="rgba(0,0,0,0.15)" />
+            <ellipse cx="40" cy="65" rx="2" ry="2" fill="rgba(0,0,0,0.1)" />
+          </svg>
         </div>
-      </motion.div>
+      </div>
+      )}
     </>
   );
 };

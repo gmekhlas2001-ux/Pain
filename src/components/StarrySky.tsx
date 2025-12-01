@@ -136,14 +136,15 @@ export const StarrySky: React.FC<StarrySkyProps> = ({ stars, onStarClick, isDayT
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse at top, rgba(30, 27, 75, 0.8) 0%, transparent 50%),
-            radial-gradient(ellipse at bottom, rgba(15, 23, 42, 0.6) 0%, transparent 50%),
+            radial-gradient(circle at 75% 15%, rgba(255, 255, 255, 0.15) 0%, transparent 25%),
+            radial-gradient(ellipse at 50% 100%, rgba(50, 80, 120, 0.3) 0%, transparent 50%),
             linear-gradient(180deg,
-              #0f0f23 0%,
-              #1a1a2e 25%,
-              #16213e 50%,
-              #0f3460 75%,
-              #000000 100%
+              #0a1628 0%,
+              #1a2840 20%,
+              #2d4a6b 40%,
+              #3d5a7a 60%,
+              #4a6888 80%,
+              #5a7895 100%
             )
           `,
           willChange: 'transform'
@@ -166,6 +167,108 @@ export const StarrySky: React.FC<StarrySkyProps> = ({ stars, onStarClick, isDayT
           setHoveredStar={setHoveredStar}
         />
       ))}
+
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '35%' }}>
+        <svg
+          viewBox="0 0 1200 400"
+          className="absolute bottom-0 w-full h-full"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="hillGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#3a5a40', stopOpacity: 1 }} />
+              <stop offset="50%" style={{ stopColor: '#4a6b50', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#5a7c60', stopOpacity: 1 }} />
+            </linearGradient>
+            <linearGradient id="grassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#8fbc8f', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#6a9a6a', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+
+          <path
+            d="M 0,300 Q 300,200 600,250 T 1200,280 L 1200,400 L 0,400 Z"
+            fill="url(#hillGradient)"
+            opacity="0.6"
+          />
+
+          <ellipse
+            cx="600"
+            cy="320"
+            rx="250"
+            ry="30"
+            fill="url(#grassGradient)"
+            opacity="0.9"
+          />
+
+          <g className="flowers">
+            {Array.from({ length: 15 }).map((_, i) => {
+              const x = 350 + (i * 35) + (Math.sin(i) * 20);
+              const y = 310 + (Math.cos(i * 2) * 10);
+              const colors = ['#ff69b4', '#ffd700', '#ff8c00', '#87ceeb', '#dda0dd'];
+              const color = colors[i % colors.length];
+              return (
+                <g key={`flower-${i}`}>
+                  <line x1={x} y1={y} x2={x} y2={y + 15} stroke="#4a6b50" strokeWidth="1.5" />
+                  <circle cx={x} cy={y} r="3" fill={color} opacity="0.8" />
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+
+        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 pointer-events-none">
+          <svg width="80" height="100" viewBox="0 0 80 100" className="drop-shadow-2xl">
+            <defs>
+              <linearGradient id="characterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#5dade2', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#2e86ab', stopOpacity: 1 }} />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <ellipse cx="40" cy="95" rx="25" ry="3" fill="rgba(0,0,0,0.3)" />
+
+            <ellipse cx="40" cy="70" rx="18" ry="22" fill="url(#characterGradient)" filter="url(#glow)" />
+
+            <circle cx="40" cy="45" r="15" fill="url(#characterGradient)" filter="url(#glow)" />
+
+            <path
+              d="M 25,35 Q 20,25 25,20 L 30,25 Z"
+              fill="url(#characterGradient)"
+              filter="url(#glow)"
+            />
+            <path
+              d="M 55,35 Q 60,25 55,20 L 50,25 Z"
+              fill="url(#characterGradient)"
+              filter="url(#glow)"
+            />
+
+            <ellipse cx="35" cy="47" rx="2" ry="3" fill="#1a1a2e" opacity="0.6" />
+            <ellipse cx="45" cy="47" rx="2" ry="3" fill="#1a1a2e" opacity="0.6" />
+
+            <path
+              d="M 32,53 Q 40,56 48,53"
+              stroke="#1a1a2e"
+              strokeWidth="1.5"
+              fill="none"
+              opacity="0.4"
+            />
+
+            <ellipse cx="20" cy="75" rx="6" ry="8" fill="url(#characterGradient)" opacity="0.9" />
+            <ellipse cx="60" cy="75" rx="6" ry="8" fill="url(#characterGradient)" opacity="0.9" />
+
+            <rect x="33" y="85" width="6" height="12" rx="3" fill="#2e86ab" opacity="0.8" />
+            <rect x="41" y="85" width="6" height="12" rx="3" fill="#2e86ab" opacity="0.8" />
+          </svg>
+        </div>
+      </div>
 
       <button
         onClick={resetToHome}
