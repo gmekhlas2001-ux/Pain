@@ -118,6 +118,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setIsLoading(true);
 
     try {
@@ -125,11 +126,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('email_send_rate_limit') || error.message.includes('rate limit')) {
+          throw new Error('Please wait a moment before requesting another password reset email.');
+        }
+        throw error;
+      }
 
       setMode('reset-sent');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email. Please try again.');
+      setSuccess('Password reset email sent! Please check your inbox and spam folder.');
+    } catch (err) {
+      const error = err as Error;
+      if (error.message.includes('email_send_rate_limit') || error.message.includes('rate limit')) {
+        setError('Please wait a moment before requesting another password reset email.');
+      } else if (error.message.includes('SMTP')) {
+        setError('Email service is not configured. Please contact the administrator or use the Supabase dashboard to reset your password.');
+      } else {
+        setError(error.message || 'Failed to send reset email. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -256,10 +270,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <p className="text-gray-300 mb-4">
                     We've sent a password reset link to <strong>{email}</strong>
                   </p>
-                  <p className="text-sm text-gray-400">
-                    Check your email and click the link to reset your password. 
-                    The link will expire in 1 hour.
-                  </p>
+                  <div className="space-y-2 text-sm text-gray-400 text-left bg-gray-800/30 p-4 rounded-lg border border-gray-700">
+                    <p className="font-medium text-gray-300">What to do next:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Check your email inbox for the reset link</li>
+                      <li>Check your spam/junk folder if you don't see it</li>
+                      <li>Click the link to set a new password</li>
+                      <li>The link expires in 1 hour</li>
+                    </ul>
+                    <p className="mt-3 text-xs text-yellow-400 flex items-start gap-2">
+                      <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                      <span>Note: If you don't receive an email, your Supabase project may need email service configuration. Contact your administrator or check the Supabase dashboard.</span>
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setMode('signin')}
