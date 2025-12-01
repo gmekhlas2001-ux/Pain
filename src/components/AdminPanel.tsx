@@ -34,9 +34,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
       if (fetchError) throw fetchError;
       setUsers(data || []);
-    } catch (err: any) {
-      console.error('Error fetching users:', err);
-      setError(err.message || 'Failed to fetch users');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
@@ -58,9 +58,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
       if (fetchError) throw fetchError;
       setStars(data || []);
-    } catch (err: any) {
-      console.error('Error fetching stars:', err);
-      setError(err.message || 'Failed to fetch stars');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to fetch stars');
     }
   };
 
@@ -79,9 +79,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       if (deleteError) throw deleteError;
 
       setUsers(users.filter(user => user.user_id !== userId));
-    } catch (err: any) {
-      console.error('Error deleting user:', err);
-      setError(err.message || 'Failed to delete user');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to delete user');
     } finally {
       setDeletingUser(null);
     }
@@ -104,9 +104,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       if (deleteError) throw deleteError;
 
       setStars(stars.filter(star => star.id !== starId));
-    } catch (err: any) {
-      console.error('Error deleting star:', err);
-      setError(err.message || 'Failed to delete star');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to delete star');
     } finally {
       setDeletingStar(null);
     }

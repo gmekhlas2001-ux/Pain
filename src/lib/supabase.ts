@@ -8,14 +8,6 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 // Get Supabase anonymous key from environment variables and trim whitespace
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
-// Log environment variables for debugging (only in development)
-if (import.meta.env.DEV) {
-  console.log('Environment check:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing'
-  });
-}
 
 // Check if required environment variables are present
 if (!supabaseUrl || !supabaseAnonKey) {
