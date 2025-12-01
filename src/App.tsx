@@ -112,6 +112,10 @@ function MainApp() {
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [prevUser, setPrevUser] = useState<typeof user | null>(null);
 
+  const [characterBodyType, setCharacterBodyType] = useState<'cat' | 'human' | 'bear' | 'fox'>('cat');
+  const [characterGender, setCharacterGender] = useState<'masculine' | 'feminine' | 'neutral'>('neutral');
+  const [characterColor, setCharacterColor] = useState('#5dade2');
+
   // Define all callbacks first before using them in effects
   const fetchStars = useCallback(async () => {
     if (!isConnected) return;
@@ -169,6 +173,11 @@ function MainApp() {
       if (error) throw error;
 
       setUserProfile(profile);
+      if (profile) {
+        setCharacterBodyType(profile.character_body_type || 'cat');
+        setCharacterGender(profile.character_gender || 'neutral');
+        setCharacterColor(profile.character_color || '#5dade2');
+      }
       if (!profile) {
         setShowProfileModal(true);
       }
@@ -465,7 +474,14 @@ function MainApp() {
 
   return (
     <div className="relative min-h-screen bg-black">
-      <StarrySky stars={stars} onStarClick={handleStarClick} isDayTime={isDayTime} />
+      <StarrySky
+        stars={stars}
+        onStarClick={handleStarClick}
+        isDayTime={isDayTime}
+        characterBodyType={characterBodyType}
+        characterGender={characterGender}
+        characterColor={characterColor}
+      />
       <MusicPlayer />
 
       <SkySelector
@@ -502,6 +518,7 @@ function MainApp() {
           <SettingsModal
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
+            onCharacterUpdate={() => checkProfileCompletion()}
           />
         )}
       </AnimatePresence>

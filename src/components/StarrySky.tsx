@@ -3,15 +3,26 @@ import { motion, useMotionValue, useSpring, animate } from 'framer-motion';
 import { Star } from '../types/star';
 import { SkySegment } from './SkySegment';
 import { InteractiveStar } from './InteractiveStar';
+import { Character } from './Character';
 import { Home } from 'lucide-react';
 
 interface StarrySkyProps {
   stars: Star[];
   onStarClick: (star: Star) => void;
   isDayTime?: boolean;
+  characterBodyType?: 'cat' | 'human' | 'bear' | 'fox';
+  characterGender?: 'masculine' | 'feminine' | 'neutral';
+  characterColor?: string;
 }
 
-export const StarrySky: React.FC<StarrySkyProps> = ({ stars, onStarClick, isDayTime = false }) => {
+export const StarrySky: React.FC<StarrySkyProps> = ({
+  stars,
+  onStarClick,
+  isDayTime = false,
+  characterBodyType = 'cat',
+  characterGender = 'neutral',
+  characterColor = '#5dade2'
+}) => {
   const [hoveredStar, setHoveredStar] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, offset: 0 });
@@ -217,57 +228,12 @@ export const StarrySky: React.FC<StarrySkyProps> = ({ stars, onStarClick, isDayT
           </g>
         </svg>
 
-        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 pointer-events-none">
-          <svg width="80" height="100" viewBox="0 0 80 100" className="drop-shadow-2xl">
-            <defs>
-              <linearGradient id="characterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#5dade2', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#2e86ab', stopOpacity: 1 }} />
-              </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            <ellipse cx="40" cy="95" rx="25" ry="3" fill="rgba(0,0,0,0.3)" />
-
-            <ellipse cx="40" cy="70" rx="18" ry="22" fill="url(#characterGradient)" filter="url(#glow)" />
-
-            <circle cx="40" cy="45" r="15" fill="url(#characterGradient)" filter="url(#glow)" />
-
-            <path
-              d="M 25,35 Q 20,25 25,20 L 30,25 Z"
-              fill="url(#characterGradient)"
-              filter="url(#glow)"
-            />
-            <path
-              d="M 55,35 Q 60,25 55,20 L 50,25 Z"
-              fill="url(#characterGradient)"
-              filter="url(#glow)"
-            />
-
-            <ellipse cx="35" cy="47" rx="2" ry="3" fill="#1a1a2e" opacity="0.6" />
-            <ellipse cx="45" cy="47" rx="2" ry="3" fill="#1a1a2e" opacity="0.6" />
-
-            <path
-              d="M 32,53 Q 40,56 48,53"
-              stroke="#1a1a2e"
-              strokeWidth="1.5"
-              fill="none"
-              opacity="0.4"
-            />
-
-            <ellipse cx="20" cy="75" rx="6" ry="8" fill="url(#characterGradient)" opacity="0.9" />
-            <ellipse cx="60" cy="75" rx="6" ry="8" fill="url(#characterGradient)" opacity="0.9" />
-
-            <rect x="33" y="85" width="6" height="12" rx="3" fill="#2e86ab" opacity="0.8" />
-            <rect x="41" y="85" width="6" height="12" rx="3" fill="#2e86ab" opacity="0.8" />
-          </svg>
-        </div>
+        <Character
+          bodyType={characterBodyType}
+          gender={characterGender}
+          color={characterColor}
+          skyOffset={skyOffset}
+        />
       </div>
 
       <button
