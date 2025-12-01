@@ -1,23 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, ShoppingCart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/useAuthStore';
+import { getUserCredits, deductStarCredit } from '../lib/paypal';
 
 interface CreateStarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (starName: string, message: string) => Promise<void>;
+  onOpenShop: () => void;
 }
 
 export const CreateStarModal: React.FC<CreateStarModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onOpenShop,
 }) => {
+  const { user } = useAuthStore();
   const [starName, setStarName] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchCredits();
+    }
+  }, [isOpen, user]);
+
+  const fetchCredits = async () => {
+    if (!user) return;
+    try {
+      const userCredits = await getUserCredits(user.id);
+      setCredits(userCredits);
+    } catch (err) {
+      console.error('Error fetching credits:', err);
+    }
+  };
 
   const checkStarNameExists = async (name: string): Promise<boolean> => {
     try {
@@ -44,6 +66,18 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
     setIsSubmitting(true);
 
     try {
+      if (!user) {
+        setError('You must be logged in to create a star');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (credits < 1) {
+        setError('You need star credits to create a star. Purchase credits in the shop.');
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!starName.trim()) {
         setError('Star name is required');
         setIsSubmitting(false);
@@ -56,10 +90,16 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
         return;
       }
 
-      // Check if star name already exists
       const nameExists = await checkStarNameExists(starName.trim());
       if (nameExists) {
         setError('This star name has already been taken. Please choose a different name.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const deducted = await deductStarCredit(user.id);
+      if (!deducted) {
+        setError('Failed to deduct credit. Please try again.');
         setIsSubmitting(false);
         return;
       }
@@ -68,6 +108,7 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
       setStarName('');
       setMessage('');
       setError(null);
+      await fetchCredits();
     } catch (err: any) {
       setError(err.message || 'Failed to create star');
     } finally {
@@ -97,7 +138,25 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
         </button>
         
         <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">Create a New Star</h2>
-        
+
+        <div className="mb-4 flex items-center justify-between p-3 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-700/30">
+          <div>
+            <p className="text-xs text-gray-400">Your Star Credits</p>
+            <p className="text-xl font-bold text-white">{credits}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenShop();
+            }}
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center gap-2 transition-colors"
+          >
+            <ShoppingCart size={16} />
+            Buy More
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit}>
           {error && (
             <div className="mb-4 flex items-center gap-2 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400">

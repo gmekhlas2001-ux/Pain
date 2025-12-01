@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StarrySky } from './components/StarrySky';
 import { CreateStarModal } from './components/CreateStarModal';
+import { ShopModal } from './components/ShopModal';
 import { MusicPlayer } from './components/MusicPlayer';
 import { ProfileModal } from './components/ProfileModal';
 import { AdminPanel } from './components/AdminPanel';
@@ -106,6 +107,7 @@ function MainApp() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const { isDayTime } = useLocationTime();
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [prevUser, setPrevUser] = useState<typeof user | null>(null);
@@ -519,6 +521,7 @@ function MainApp() {
           onCreateStarClick={() => setIsModalOpen(true)}
           onSignInClick={() => setIsAuthModalOpen(true)}
           onSettingsClick={() => setShowSettings(true)}
+          onShopClick={() => setShowShop(true)}
         />
       </motion.div>
 
@@ -645,6 +648,12 @@ function MainApp() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateStar}
+        onOpenShop={() => setShowShop(true)}
+      />
+
+      <ShopModal
+        isOpen={showShop}
+        onClose={() => setShowShop(false)}
       />
 
       <AuthModal

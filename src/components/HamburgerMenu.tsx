@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, UserCircle, LogOut, Search, Users, PlusCircle, Settings } from 'lucide-react';
+import { Menu, X, UserCircle, LogOut, Search, Users, PlusCircle, Settings, ShoppingCart } from 'lucide-react';
 
 interface HamburgerMenuProps {
   isAuthenticated: boolean;
@@ -12,6 +12,7 @@ interface HamburgerMenuProps {
   onCreateStarClick: () => void;
   onSignInClick: () => void;
   onSettingsClick: () => void;
+  onShopClick: () => void;
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -24,6 +25,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onCreateStarClick,
   onSignInClick,
   onSettingsClick,
+  onShopClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,12 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       label: 'Create Star',
       action: onCreateStarClick,
       color: 'text-blue-400 hover:text-blue-300',
+    },
+    {
+      icon: ShoppingCart,
+      label: 'Shop',
+      action: onShopClick,
+      color: 'text-yellow-400 hover:text-yellow-300',
     },
     {
       icon: UserCircle,
