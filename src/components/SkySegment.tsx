@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useTransform, MotionValue } from 'framer-motion';
+import { MotionValue } from 'framer-motion';
 
 interface SkySegmentProps {
   segment: number;
@@ -7,53 +7,19 @@ interface SkySegmentProps {
   SKY_CIRCUMFERENCE: number;
 }
 
-export const SkySegment: React.FC<SkySegmentProps> = ({ 
-  segment, 
-  normalizedOffset, 
-  SKY_CIRCUMFERENCE 
+export const SkySegment: React.FC<SkySegmentProps> = ({
+  segment,
+  normalizedOffset,
+  SKY_CIRCUMFERENCE
 }) => {
-  // Move useTransform calls to component level to avoid hooks in loops
-  const bgStarsTransform = useTransform(
-    normalizedOffset, 
-    (value) => value * 0.2
-  );
-  
-  const largeStarsTransform = useTransform(
-    normalizedOffset, 
-    (value) => value * 0.3
-  );
-  
-  const clusterTransform = useTransform(
-    normalizedOffset, 
-    (value) => value * 0.4
-  );
-  
-  const nebulaTransform = useTransform(
-    normalizedOffset, 
-    (value) => value * 0.6
-  );
-  
-  const milkyWayTransform = useTransform(
-    normalizedOffset, 
-    (value) => value * 0.1
-  );
-  
-  // Moon should not move with sky - keep it fixed
-  // const moonTransform = useTransform(
-  //   normalizedOffset, 
-  //   (value) => value * 0.3
-  // );
-
   return (
     <>
       {/* Static background stars */}
-      <motion.div 
+      <div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
-          willChange: 'transform',
-          x: bgStarsTransform
         }}
       >
         {Array.from({ length: 300 }).map((_, i) => {
@@ -74,16 +40,14 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             />
           );
         })}
-      </motion.div>
+      </div>
 
       {/* Larger background stars */}
-      <motion.div 
+      <div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
-          willChange: 'transform',
-          x: largeStarsTransform
         }}
       >
         {Array.from({ length: 40 }).map((_, i) => {
@@ -104,16 +68,14 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             />
           );
         })}
-      </motion.div>
+      </div>
 
       {/* Constellation-like star clusters */}
-      <motion.div 
+      <div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
-          willChange: 'transform',
-          x: clusterTransform
         }}
       >
         {Array.from({ length: 15 }).map((_, i) => {
@@ -143,16 +105,14 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             </div>
           );
         })}
-      </motion.div>
+      </div>
 
       {/* Nebula-like clouds */}
-      <motion.div 
+      <div
         className="absolute inset-0"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
-          willChange: 'transform',
-          x: nebulaTransform
         }}
       >
         {Array.from({ length: 3 }).map((_, i) => (
@@ -169,31 +129,26 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             }}
           />
         ))}
-      </motion.div>
+      </div>
 
       {/* Milky Way band */}
-      <motion.div
+      <div
         className="absolute inset-0 opacity-15"
         style={{
-          left: `${segment * 100 - 100}%`,
+          left: 0,
           width: '100%',
           background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 70%)',
-          rotate: '-15deg',
-          willChange: 'transform',
-          x: milkyWayTransform
+          transform: 'rotate(-15deg)',
         }}
       />
 
-      {/* Moon */}
-      <motion.div 
+      {/* Moon - only show in first segment */}
+      {segment === 0 && (
+      <div
         className="absolute w-24 h-24"
         style={{
           right: '10%',
           top: '10%',
-          // Fixed position - only show moon in first segment
-          left: segment === 0 ? '80%' : '-200%', // Hide moon in other segments
-          willChange: 'transform'
-          // Removed x: moonTransform to keep moon fixed
         }}
       >
         <div className="relative w-full h-full">
@@ -349,7 +304,8 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
+      )}
     </>
   );
 };

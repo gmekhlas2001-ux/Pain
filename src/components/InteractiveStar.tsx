@@ -19,24 +19,13 @@ export const InteractiveStar: React.FC<InteractiveStarProps> = ({
   hoveredStar,
   setHoveredStar,
 }) => {
-  // Move useTransform to component level to avoid hooks in loops
-  const starTransform = useTransform(
-    normalizedOffset,
-    (value) => value * 0.4 // Slower movement to match new sky speed
-  );
-
   return (
     <motion.div
       className="absolute cursor-pointer interactive-star"
-      initial={{
+      style={{
         left: `${star.x}%`,
         top: `${star.y}%`,
-        x: "-50%",
-        y: "-50%"
-      }}
-      style={{
-        x: starTransform,
-        willChange: 'transform',
+        transform: 'translate(-50%, -50%)',
         zIndex: hoveredStar === star.id ? 10 : 1,
       }}
       onClick={(e) => {
