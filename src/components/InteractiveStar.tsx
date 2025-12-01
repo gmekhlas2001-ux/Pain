@@ -4,7 +4,7 @@ import { Star } from '../types/star';
 
 interface InteractiveStarProps {
   star: Star;
-  normalizedOffset: MotionValue<number>;
+  skyOffset: MotionValue<number>;
   onStarClick: (star: Star) => void;
   isDragging: boolean;
   hoveredStar: string | null;
@@ -13,28 +13,25 @@ interface InteractiveStarProps {
 
 export const InteractiveStar: React.FC<InteractiveStarProps> = ({
   star,
-  normalizedOffset,
+  skyOffset,
   onStarClick,
   isDragging,
   hoveredStar,
   setHoveredStar,
 }) => {
   const starTransform = useTransform(
-    normalizedOffset,
-    (value) => value * 0.4
+    skyOffset,
+    (value) => value + (star.x * window.innerWidth / 100)
   );
 
   return (
     <motion.div
       className="absolute cursor-pointer interactive-star"
-      initial={{
-        left: `${star.x}%`,
-        top: `${star.y}%`,
-        x: "-50%",
-        y: "-50%"
-      }}
       style={{
+        left: 0,
+        top: `${star.y}%`,
         x: starTransform,
+        y: "-50%",
         willChange: 'transform',
         zIndex: hoveredStar === star.id ? 10 : 1,
       }}

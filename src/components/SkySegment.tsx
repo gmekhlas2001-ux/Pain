@@ -3,8 +3,7 @@ import { motion, useTransform, MotionValue } from 'framer-motion';
 
 interface SkySegmentProps {
   segment: number;
-  normalizedOffset: MotionValue<number>;
-  SKY_CIRCUMFERENCE: number;
+  skyOffset: MotionValue<number>;
 }
 
 const seededRandom = (seed: number) => {
@@ -14,31 +13,30 @@ const seededRandom = (seed: number) => {
 
 export const SkySegment: React.FC<SkySegmentProps> = ({
   segment,
-  normalizedOffset,
-  SKY_CIRCUMFERENCE
+  skyOffset
 }) => {
   const bgStarsTransform = useTransform(
-    normalizedOffset,
+    skyOffset,
     (value) => value * 0.2
   );
 
   const largeStarsTransform = useTransform(
-    normalizedOffset,
+    skyOffset,
     (value) => value * 0.3
   );
 
   const clusterTransform = useTransform(
-    normalizedOffset,
+    skyOffset,
     (value) => value * 0.4
   );
 
   const nebulaTransform = useTransform(
-    normalizedOffset,
+    skyOffset,
     (value) => value * 0.6
   );
 
   const milkyWayTransform = useTransform(
-    normalizedOffset,
+    skyOffset,
     (value) => value * 0.1
   );
 
