@@ -233,6 +233,7 @@ export const StarrySky: React.FC<StarrySkyProps> = ({
           gender={characterGender}
           color={characterColor}
           skyOffset={skyOffset}
+          isDraggingStar={isDragging}
         />
       </div>
 

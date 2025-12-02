@@ -24,6 +24,25 @@ export const InteractiveStar: React.FC<InteractiveStarProps> = ({
     (value) => value + (star.x * window.innerWidth / 100)
   );
 
+  const isBehindMoon = useTransform(
+    starTransform,
+    (x) => {
+      const moonRight = window.innerWidth * 0.90;
+      const moonLeft = window.innerWidth * 0.78;
+      const moonTop = window.innerHeight * 0.08;
+      const moonBottom = window.innerHeight * 0.24;
+
+      const starScreenY = (star.y / 100) * window.innerHeight;
+
+      return x >= moonLeft && x <= moonRight && starScreenY >= moonTop && starScreenY <= moonBottom;
+    }
+  );
+
+  const starOpacity = useTransform(
+    isBehindMoon,
+    (behind) => behind ? 0 : 1
+  );
+
   return (
     <motion.div
       className="absolute cursor-pointer interactive-star"
@@ -34,6 +53,8 @@ export const InteractiveStar: React.FC<InteractiveStarProps> = ({
         y: "-50%",
         willChange: 'transform',
         zIndex: hoveredStar === star.id ? 10 : 1,
+        opacity: starOpacity,
+        pointerEvents: 'auto',
       }}
       onClick={(e) => {
         e.stopPropagation();
