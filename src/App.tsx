@@ -115,6 +115,7 @@ function MainApp() {
   const [characterBodyType, setCharacterBodyType] = useState<'cat' | 'human' | 'bear' | 'fox'>('cat');
   const [characterGender, setCharacterGender] = useState<'masculine' | 'feminine' | 'neutral'>('neutral');
   const [characterColor, setCharacterColor] = useState('#5dade2');
+  const [userCredits, setUserCredits] = useState<number>(0);
 
   // Define all callbacks first before using them in effects
   const fetchStars = useCallback(async () => {
@@ -160,6 +161,24 @@ function MainApp() {
     }
   }, [isConnected, currentSky, user, viewingUserId]);
 
+  const fetchUserCredits = useCallback(async () => {
+    if (!user || !isConnected) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('star_credits')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      setUserCredits(data?.star_credits || 0);
+    } catch {
+      setUserCredits(0);
+    }
+  }, [user, isConnected]);
+
   const checkProfileCompletion = useCallback(async () => {
     if (!user || !isConnected) return;
 
@@ -183,10 +202,12 @@ function MainApp() {
       if (profile && !profile.is_profile_complete && !dismissed) {
         setShowProfileModal(true);
       }
+
+      fetchUserCredits();
     } catch {
       setError('Failed to load profile. Please try again.');
     }
-  }, [user, isConnected]);
+  }, [user, isConnected, fetchUserCredits]);
 
   const checkAdminStatus = useCallback(async () => {
     if (!user || !isConnected) return;
@@ -271,12 +292,6 @@ function MainApp() {
     checkProfileCompletion();
     checkAdminStatus();
   }, [user, isConnected, checkProfileCompletion, checkAdminStatus]);
-
-  useEffect(() => {
-    if (isConnected) {
-      fetchStars();
-    }
-  }, [isConnected, fetchStars]);
 
   useEffect(() => {
     if (isConnected) {

@@ -11,7 +11,7 @@ interface InteractiveStarProps {
   setHoveredStar: (id: string | null) => void;
 }
 
-export const InteractiveStar: React.FC<InteractiveStarProps> = ({
+const InteractiveStarComponent: React.FC<InteractiveStarProps> = ({
   star,
   skyOffset,
   onStarClick,
@@ -213,3 +213,12 @@ export const InteractiveStar: React.FC<InteractiveStarProps> = ({
     </motion.div>
   );
 };
+
+export const InteractiveStar = React.memo(InteractiveStarComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.star.id === nextProps.star.id &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.hoveredStar === nextProps.hoveredStar &&
+    prevProps.skyOffset === nextProps.skyOffset
+  );
+});

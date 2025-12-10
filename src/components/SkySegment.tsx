@@ -41,7 +41,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
   );
 
   const bgStars = useMemo(() => {
-    return Array.from({ length: 300 }).map((_, i) => {
+    return Array.from({ length: 100 }).map((_, i) => {
       const seed = segment * 1000 + i;
       const size = seededRandom(seed) * 2 + 0.5;
       const opacity = seededRandom(seed + 0.1) * 0.8 + 0.2;
@@ -59,7 +59,7 @@ export const SkySegment: React.FC<SkySegmentProps> = ({
   }, [segment]);
 
   const largeStars = useMemo(() => {
-    return Array.from({ length: 40 }).map((_, i) => {
+    return Array.from({ length: 20 }).map((_, i) => {
       const seed = segment * 2000 + i;
       const size = seededRandom(seed) * 3 + 2;
       const opacity = seededRandom(seed + 0.1) * 0.6 + 0.4;

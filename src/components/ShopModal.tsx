@@ -25,15 +25,25 @@ export const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
   const [paypalLoaded, setPaypalLoaded] = useState(false);
   const starButtonRef = useRef<HTMLDivElement>(null);
   const musicButtonRef = useRef<HTMLDivElement>(null);
+  const buttonsRendered = useRef(false);
 
   const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
 
   useEffect(() => {
     if (isOpen && user) {
       fetchCredits();
-      initPayPal();
+      if (!paypalLoaded) {
+        initPayPal();
+      }
     }
   }, [isOpen, user]);
+
+  useEffect(() => {
+    if (paypalLoaded && !buttonsRendered.current && isOpen) {
+      renderPayPalButtons();
+      buttonsRendered.current = true;
+    }
+  }, [paypalLoaded, isOpen]);
 
   const fetchCredits = async () => {
     if (!user) return;
@@ -49,7 +59,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
     try {
       await loadPayPalScript(PAYPAL_CLIENT_ID);
       setPaypalLoaded(true);
-      renderPayPalButtons();
     } catch (err) {
       setError('Failed to load PayPal. Please refresh the page.');
     }

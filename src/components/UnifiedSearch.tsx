@@ -29,11 +29,20 @@ export const UnifiedSearch: React.FC<UnifiedSearchProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (searchTerm.trim()) {
+        searchAll();
+      } else {
+        setResults([]);
+        setLoading(false);
+      }
+    }, 300);
+
     if (searchTerm.trim()) {
-      searchAll();
-    } else {
-      setResults([]);
+      setLoading(true);
     }
+
+    return () => clearTimeout(debounceTimer);
   }, [searchTerm]);
 
   const searchAll = async () => {
