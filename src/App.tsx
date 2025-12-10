@@ -30,11 +30,15 @@ const hasSupabaseCredentials = !!(
 
 // Main App component - the root component of the application
 function App() {
-  // Check early conditions before hooks
-  const isPasswordResetPage = window.location.pathname === '/reset-password' ||
-                              window.location.hash.includes('type=recovery');
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const hashType = hashParams.get('type');
+  const hasAccessToken = hashParams.has('access_token');
 
-  // If it's password reset page, render only that
+  const isPasswordResetPage =
+    window.location.pathname === '/reset-password' ||
+    hashType === 'recovery' ||
+    (hasAccessToken && window.location.hash.includes('type=recovery'));
+
   if (isPasswordResetPage) {
     return <PasswordResetPage />;
   }
