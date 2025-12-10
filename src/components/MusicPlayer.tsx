@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface MusicPlayerProps {
   className?: string;
+  isAdmin: boolean;
 }
 
 interface BackgroundMusic {
@@ -16,7 +17,7 @@ interface BackgroundMusic {
   created_at: string;
 }
 
-export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
+export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '', isAdmin }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
@@ -24,7 +25,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
   const { user } = useAuthStore();
   const [playlist, setPlaylist] = useState<BackgroundMusic[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -35,34 +35,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
   const BASE_RETRY_DELAY = 5000;
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('id')
-          .eq('email', user.email)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-          return;
-        }
-
-        setIsAdmin(!!data);
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminStatus();
-
     const subscription = supabase
       .channel('background_music_changes')
       .on(
@@ -87,7 +59,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ className = '' }) => {
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [user]);
+  }, []);
 
   const retryFetch = () => {
     if (retryTimeoutRef.current) {

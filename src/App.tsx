@@ -109,6 +109,7 @@ function MainApp() {
   const [isConnected, setIsConnected] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryAttempts, setRetryAttempts] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -314,6 +315,7 @@ function MainApp() {
         } else {
           setConnectionError(null);
           setError(null);
+          setRetryAttempts(0);
           initialize();
           fetchStars();
         }
@@ -490,13 +492,16 @@ function MainApp() {
 
     clearConnectionCache();
 
+    const backoffDelay = Math.min(1000 * Math.pow(2, retryAttempts), 30000);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
 
       const networkResult = await testNetworkConnectivity();
       if (!networkResult.success) {
         setConnectionError(networkResult.error || 'Network connectivity issue');
         setIsRetrying(false);
+        setRetryAttempts(prev => prev + 1);
         return;
       }
 
@@ -505,8 +510,10 @@ function MainApp() {
 
       if (!connectionResult.success) {
         setConnectionError(connectionResult.error || 'Database connection failed');
+        setRetryAttempts(prev => prev + 1);
       } else {
         setConnectionError(null);
+        setRetryAttempts(0);
         initialize();
         fetchStars();
       }
@@ -514,6 +521,7 @@ function MainApp() {
       console.error('Retry connection failed:', err);
       setConnectionError('Failed to retry connection. Please check your network and try again.');
       setIsConnected(false);
+      setRetryAttempts(prev => prev + 1);
     } finally {
       setIsRetrying(false);
     }
@@ -592,7 +600,7 @@ function MainApp() {
         characterGender={characterGender}
         characterColor={characterColor}
       />
-      <MusicPlayer />
+      <MusicPlayer isAdmin={isAdmin} />
 
       <SkySelector
         currentSky={currentSky}

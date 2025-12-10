@@ -251,6 +251,7 @@ export const isNetworkError = (error: any): boolean => {
 
   const errorMessage = error?.message?.toLowerCase() || '';
   const errorCode = error?.code?.toLowerCase() || '';
+  const httpStatus = error?.status || error?.statusCode;
 
   return (
     errorMessage.includes('fetch') ||
@@ -258,9 +259,15 @@ export const isNetworkError = (error: any): boolean => {
     errorMessage.includes('timeout') ||
     errorMessage.includes('aborted') ||
     errorMessage.includes('failed to fetch') ||
+    errorMessage.includes('upstream connect error') ||
+    errorMessage.includes('connection timeout') ||
+    errorMessage.includes('reset before headers') ||
     errorCode === 'network_error' ||
     errorCode === 'fetch_error' ||
     error?.name === 'AbortError' ||
-    error?.name === 'TypeError'
+    error?.name === 'TypeError' ||
+    httpStatus === 503 ||
+    httpStatus === 502 ||
+    httpStatus === 504
   );
 };
