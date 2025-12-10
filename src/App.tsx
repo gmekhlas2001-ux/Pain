@@ -685,7 +685,7 @@ function MainApp() {
             onClose={() => setShowProfileModal(false)}
             userId={user.id}
             existingProfile={userProfile || undefined}
-            isNewUser={!userProfile?.is_profile_complete}
+            isNewUser={!userProfile}
           />
         )}
       </AnimatePresence>
