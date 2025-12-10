@@ -18,7 +18,7 @@ import { useLocationTime } from './hooks/useLocationTime';
 import { Star } from './types/star';
 import { Profile } from './types/profile';
 import { useAuthStore } from './store/useAuthStore';
-import { supabase, checkSupabaseConnection, testNetworkConnectivity } from './lib/supabase';
+import { supabase, checkSupabaseConnection, testNetworkConnectivity, checkSupabaseConnectionCached, clearConnectionCache } from './lib/supabase';
 import { Trash2, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -242,27 +242,33 @@ function MainApp() {
     const checkConnection = async () => {
       setIsRetrying(true);
 
-      const networkResult = await testNetworkConnectivity();
-      if (!networkResult.success) {
+      try {
+        const networkResult = await testNetworkConnectivity();
+        if (!networkResult.success) {
+          setIsConnected(false);
+          setConnectionError(networkResult.error || 'Network connectivity issue');
+          setIsRetrying(false);
+          return;
+        }
+
+        const connectionResult = await checkSupabaseConnectionCached();
+        setIsConnected(connectionResult.success);
+
+        if (!connectionResult.success) {
+          setConnectionError(connectionResult.error || 'Database connection failed');
+        } else {
+          setConnectionError(null);
+          setError(null);
+          initialize();
+          fetchStars();
+        }
+      } catch (err) {
+        console.error('Connection check failed:', err);
         setIsConnected(false);
-        setConnectionError(networkResult.error || 'Network connectivity issue');
+        setConnectionError('Failed to check connection. Please try again.');
+      } finally {
         setIsRetrying(false);
-        return;
       }
-
-      const connectionResult = await checkSupabaseConnection();
-      setIsConnected(connectionResult.success);
-
-      if (!connectionResult.success) {
-        setConnectionError(connectionResult.error || 'Database connection failed');
-      } else {
-        setConnectionError(null);
-        setError(null);
-        initialize();
-        fetchStars();
-      }
-
-      setIsRetrying(false);
     };
 
     checkConnection();
@@ -298,6 +304,24 @@ function MainApp() {
       fetchStars();
     }
   }, [isConnected, fetchStars]);
+
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const healthCheckInterval = setInterval(async () => {
+      try {
+        const result = await checkSupabaseConnectionCached();
+        if (!result.success && isConnected) {
+          setIsConnected(false);
+          setConnectionError(result.error || 'Connection lost');
+        }
+      } catch (err) {
+        console.error('Health check failed:', err);
+      }
+    }, 60000);
+
+    return () => clearInterval(healthCheckInterval);
+  }, [isConnected]);
 
   const handleCreateStar = async (starName: string, message: string): Promise<void> => {
     if (!isConnected) {
@@ -403,27 +427,35 @@ function MainApp() {
     setIsRetrying(true);
     setConnectionError(null);
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    clearConnectionCache();
 
-    const networkResult = await testNetworkConnectivity();
-    if (!networkResult.success) {
-      setConnectionError(networkResult.error || 'Network connectivity issue');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const networkResult = await testNetworkConnectivity();
+      if (!networkResult.success) {
+        setConnectionError(networkResult.error || 'Network connectivity issue');
+        setIsRetrying(false);
+        return;
+      }
+
+      const connectionResult = await checkSupabaseConnection();
+      setIsConnected(connectionResult.success);
+
+      if (!connectionResult.success) {
+        setConnectionError(connectionResult.error || 'Database connection failed');
+      } else {
+        setConnectionError(null);
+        initialize();
+        fetchStars();
+      }
+    } catch (err) {
+      console.error('Retry connection failed:', err);
+      setConnectionError('Failed to retry connection. Please check your network and try again.');
+      setIsConnected(false);
+    } finally {
       setIsRetrying(false);
-      return;
     }
-
-    const connectionResult = await checkSupabaseConnection();
-    setIsConnected(connectionResult.success);
-
-    if (!connectionResult.success) {
-      setConnectionError(connectionResult.error || 'Database connection failed');
-    } else {
-      setConnectionError(null);
-      initialize();
-      fetchStars();
-    }
-
-    setIsRetrying(false);
   };
 
   const handleSearchClick = () => {

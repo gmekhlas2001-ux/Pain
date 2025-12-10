@@ -120,78 +120,128 @@ Unable to connect to your Supabase project. Please check:
 Error details: ${error?.message || 'Unknown error'}`;
 };
 
-// Helper function to check Supabase connection with better error handling
-export const checkSupabaseConnection = async (): Promise<{ success: boolean; error?: string }> => {
-  try {
-    // First, try a simple health check with a timeout
-    const controller = new AbortController(); // Create abort controller for timeout
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+// Helper function to check Supabase connection with better error handling and retry
+export const checkSupabaseConnection = async (retries = 3): Promise<{ success: boolean; error?: string }> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    // Try to check if we can connect to Supabase at all
-    const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
 
-    clearTimeout(timeoutId); // Clear the timeout since request completed
+      clearTimeout(timeoutId);
 
-    if (error) {
-      // Log error for debugging
-      console.error('Supabase connection error:', error);
-      // Return failure with user-friendly error message
+      if (error) {
+        console.error(`Supabase connection error (attempt ${attempt}/${retries}):`, error);
+
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+
+        return {
+          success: false,
+          error: getConnectionErrorMessage(error)
+        };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error(`Supabase connection error (attempt ${attempt}/${retries}):`, err);
+
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+
       return {
         success: false,
-        error: getConnectionErrorMessage(error)
+        error: getConnectionErrorMessage(err)
       };
     }
-
-    // If we can get session info, connection is working
-    return { success: true };
-  } catch (err: any) {
-    // Log error for debugging
-    console.error('Supabase connection error:', err);
-    // Return failure with user-friendly error message
-    return {
-      success: false,
-      error: getConnectionErrorMessage(err)
-    };
   }
+
+  return {
+    success: false,
+    error: getConnectionErrorMessage(new Error('Connection failed after retries'))
+  };
 };
 
 // Additional helper to test basic network connectivity
-export const testNetworkConnectivity = async (): Promise<{ success: boolean; error?: string }> => {
-  try {
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+export const testNetworkConnectivity = async (retries = 2): Promise<{ success: boolean; error?: string }> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    // Try to make a HEAD request to Supabase REST API endpoint
-    const response = await fetch(`${normalizedUrl}/rest/v1/`, {
-      method: 'HEAD', // HEAD request to minimize data transfer
-      headers: {
-        'apikey': supabaseAnonKey, // Include API key in headers
-        'Authorization': `Bearer ${supabaseAnonKey}` // Include authorization header
-      },
-      signal: controller.signal // Include abort signal for timeout
-    });
+      const response = await fetch(`${normalizedUrl}/rest/v1/`, {
+        method: 'HEAD',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        signal: controller.signal
+      });
 
-    clearTimeout(timeoutId); // Clear timeout since request completed
-    
-    // Check if response is not OK
-    if (!response.ok) {
-      // Return failure with status code information
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.error(`Network test failed (attempt ${attempt}/${retries}):`, response.status);
+
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+
+        return {
+          success: false,
+          error: `Server responded with status ${response.status}. Please check your Supabase project status.`
+        };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error(`Network connectivity test failed (attempt ${attempt}/${retries}):`, err);
+
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+
       return {
         success: false,
-        error: `Server responded with status ${response.status}. Please check your Supabase project status.`
+        error: getConnectionErrorMessage(err)
       };
     }
-    
-    // Return success if everything is OK
-    return { success: true };
-  } catch (err: any) {
-    // Log error for debugging
-    console.error('Network connectivity test failed:', err);
-    // Return failure with user-friendly error message
-    return {
-      success: false,
-      error: getConnectionErrorMessage(err)
-    };
   }
+
+  return {
+    success: false,
+    error: getConnectionErrorMessage(new Error('Network test failed after retries'))
+  };
+};
+
+let connectionCache: { success: boolean; timestamp: number; error?: string } | null = null;
+const CACHE_DURATION = 30000;
+
+export const checkSupabaseConnectionCached = async (): Promise<{ success: boolean; error?: string }> => {
+  const now = Date.now();
+
+  if (connectionCache && (now - connectionCache.timestamp) < CACHE_DURATION) {
+    return { success: connectionCache.success, error: connectionCache.error };
+  }
+
+  const result = await checkSupabaseConnection();
+
+  connectionCache = {
+    success: result.success,
+    error: result.error,
+    timestamp: now
+  };
+
+  return result;
+};
+
+export const clearConnectionCache = () => {
+  connectionCache = null;
 };
