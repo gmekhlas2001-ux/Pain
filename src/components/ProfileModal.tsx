@@ -53,19 +53,30 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     }
 
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          first_name: firstName,
-          last_name: lastName,
-          username,
-          display_name: displayName || `${firstName} ${lastName}`,
-          hide_display_name: hideDisplayName,
-          is_profile_complete: true,
-        });
+      const profileData: any = {
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        display_name: displayName || `${firstName} ${lastName}`,
+        hide_display_name: hideDisplayName,
+        is_profile_complete: true,
+      };
 
-      if (updateError) throw updateError;
+      if (isNewUser) {
+        profileData.id = userId;
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(profileData);
+
+        if (insertError) throw insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', userId);
+
+        if (updateError) throw updateError;
+      }
 
       onClose();
     } catch (err: any) {
