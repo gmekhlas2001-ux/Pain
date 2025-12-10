@@ -10,6 +10,7 @@ interface ProfileModalProps {
   userId: string;
   existingProfile?: Partial<Profile>;
   isNewUser?: boolean;
+  onProfileUpdated?: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -18,6 +19,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   userId,
   existingProfile,
   isNewUser = false,
+  onProfileUpdated,
 }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -67,7 +69,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
       if (updateError) throw updateError;
 
-      window.location.reload();
+      if (onProfileUpdated) {
+        onProfileUpdated();
+      }
       onClose();
     } catch (err: any) {
       console.error('Error updating profile:', err);
@@ -75,6 +79,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleClose = () => {
+    if (isNewUser && existingProfile && !existingProfile.is_profile_complete) {
+      localStorage.setItem(`profile_dismissed_${userId}`, 'true');
+    }
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -96,14 +107,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <h2 className="text-xl font-semibold text-white">
               {isNewUser ? 'Complete Your Profile' : 'Edit Profile'}
             </h2>
-            {!isNewUser && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={20} />
-              </button>
-            )}
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
 

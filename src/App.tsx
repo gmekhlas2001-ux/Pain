@@ -178,7 +178,9 @@ function MainApp() {
         setCharacterGender(profile.character_gender || 'neutral');
         setCharacterColor(profile.character_color || '#5dade2');
       }
-      if (!profile) {
+
+      const dismissed = localStorage.getItem(`profile_dismissed_${user.id}`);
+      if (profile && !profile.is_profile_complete && !dismissed) {
         setShowProfileModal(true);
       }
     } catch {
@@ -685,7 +687,8 @@ function MainApp() {
             onClose={() => setShowProfileModal(false)}
             userId={user.id}
             existingProfile={userProfile || undefined}
-            isNewUser={!userProfile}
+            isNewUser={!userProfile?.is_profile_complete}
+            onProfileUpdated={() => checkProfileCompletion()}
           />
         )}
       </AnimatePresence>
