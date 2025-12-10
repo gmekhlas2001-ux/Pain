@@ -1,6 +1,6 @@
 // Main application component that orchestrates the entire Star Letter app
 // Handles authentication, star management, modals, and overall app state
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StarrySky } from './components/StarrySky';
 import { CreateStarModal } from './components/CreateStarModal';
 import { ShopModal } from './components/ShopModal';
@@ -110,6 +110,7 @@ function MainApp() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryAttempts, setRetryAttempts] = useState(0);
+  const isCheckingConnection = useRef(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -296,6 +297,11 @@ function MainApp() {
 
   useEffect(() => {
     const checkConnection = async () => {
+      if (isCheckingConnection.current) {
+        return;
+      }
+
+      isCheckingConnection.current = true;
       setIsRetrying(true);
 
       try {
@@ -304,6 +310,7 @@ function MainApp() {
           setIsConnected(false);
           setConnectionError(networkResult.error || 'Network connectivity issue');
           setIsRetrying(false);
+          isCheckingConnection.current = false;
           return;
         }
 
@@ -325,11 +332,12 @@ function MainApp() {
         setConnectionError('Failed to check connection. Please try again.');
       } finally {
         setIsRetrying(false);
+        isCheckingConnection.current = false;
       }
     };
 
     checkConnection();
-  }, [initialize, fetchStars]);
+  }, []);
 
   useEffect(() => {
     if (!isConnected) return;
@@ -487,6 +495,11 @@ function MainApp() {
   };
 
   const handleRetryConnection = async () => {
+    if (isCheckingConnection.current) {
+      return;
+    }
+
+    isCheckingConnection.current = true;
     setIsRetrying(true);
     setConnectionError(null);
 
@@ -502,6 +515,7 @@ function MainApp() {
         setConnectionError(networkResult.error || 'Network connectivity issue');
         setIsRetrying(false);
         setRetryAttempts(prev => prev + 1);
+        isCheckingConnection.current = false;
         return;
       }
 
@@ -524,6 +538,7 @@ function MainApp() {
       setRetryAttempts(prev => prev + 1);
     } finally {
       setIsRetrying(false);
+      isCheckingConnection.current = false;
     }
   };
 
