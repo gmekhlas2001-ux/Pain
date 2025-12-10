@@ -245,3 +245,22 @@ export const checkSupabaseConnectionCached = async (): Promise<{ success: boolea
 export const clearConnectionCache = () => {
   connectionCache = null;
 };
+
+export const isNetworkError = (error: any): boolean => {
+  if (!error) return false;
+
+  const errorMessage = error?.message?.toLowerCase() || '';
+  const errorCode = error?.code?.toLowerCase() || '';
+
+  return (
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('network') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('aborted') ||
+    errorMessage.includes('failed to fetch') ||
+    errorCode === 'network_error' ||
+    errorCode === 'fetch_error' ||
+    error?.name === 'AbortError' ||
+    error?.name === 'TypeError'
+  );
+};

@@ -18,7 +18,7 @@ import { useLocationTime } from './hooks/useLocationTime';
 import { Star } from './types/star';
 import { Profile } from './types/profile';
 import { useAuthStore } from './store/useAuthStore';
-import { supabase, checkSupabaseConnection, testNetworkConnectivity, checkSupabaseConnectionCached, clearConnectionCache } from './lib/supabase';
+import { supabase, checkSupabaseConnection, testNetworkConnectivity, checkSupabaseConnectionCached, clearConnectionCache, isNetworkError } from './lib/supabase';
 import { Trash2, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -148,20 +148,33 @@ function MainApp() {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
+        if (isNetworkError(fetchError)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          return;
+        }
+
         if (fetchError.code === '42P01') {
           setStars([]);
           setError('Database tables not yet configured. Please run migrations.');
           return;
         }
 
+        console.error('Fetch stars error:', fetchError);
         setError('Failed to load stars. Please try again.');
         return;
       }
 
       setStars(data || []);
       setError(null);
-    } catch {
-      setError('Failed to load stars. Please try again.');
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Fetch stars error:', err);
+        setError('Failed to load stars. Please try again.');
+      }
     }
   }, [isConnected, currentSky, user, viewingUserId]);
 
@@ -175,11 +188,24 @@ function MainApp() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        if (isNetworkError(error)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          return;
+        }
+        throw error;
+      }
 
       setUserCredits(data?.star_credits || 0);
-    } catch {
-      setUserCredits(0);
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Fetch user credits error:', err);
+        setUserCredits(0);
+      }
     }
   }, [user, isConnected]);
 
@@ -193,7 +219,14 @@ function MainApp() {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        if (isNetworkError(error)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          return;
+        }
+        throw error;
+      }
 
       setUserProfile(profile);
       if (profile) {
@@ -208,8 +241,14 @@ function MainApp() {
       }
 
       fetchUserCredits();
-    } catch {
-      setError('Failed to load profile. Please try again.');
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Check profile completion error:', err);
+        setError('Failed to load profile. Please try again.');
+      }
     }
   }, [user, isConnected, fetchUserCredits]);
 
@@ -224,13 +263,25 @@ function MainApp() {
         .maybeSingle();
 
       if (error) {
+        if (isNetworkError(error)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          return;
+        }
+        console.error('Check admin status error:', error);
         setIsAdmin(false);
         return;
       }
 
       setIsAdmin(!!data);
-    } catch {
-      setIsAdmin(false);
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Check admin status error:', err);
+        setIsAdmin(false);
+      }
     }
   }, [user, isConnected]);
 
@@ -309,24 +360,6 @@ function MainApp() {
     }
   }, [isConnected, fetchStars]);
 
-  useEffect(() => {
-    if (!isConnected) return;
-
-    const healthCheckInterval = setInterval(async () => {
-      try {
-        const result = await checkSupabaseConnectionCached();
-        if (!result.success && isConnected) {
-          setIsConnected(false);
-          setConnectionError(result.error || 'Connection lost');
-        }
-      } catch (err) {
-        console.error('Health check failed:', err);
-      }
-    }, 60000);
-
-    return () => clearInterval(healthCheckInterval);
-  }, [isConnected]);
-
   const handleCreateStar = async (starName: string, message: string): Promise<void> => {
     if (!isConnected) {
       setError('Unable to connect to the database. Please try again later.');
@@ -389,6 +422,12 @@ function MainApp() {
         .insert([newStar]);
 
       if (insertError) {
+        if (isNetworkError(insertError)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          throw new Error('Database connection error');
+        }
+        console.error('Create star error:', insertError);
         setError('Failed to create star. Please try again.');
         throw new Error('Failed to create star');
       }
@@ -397,7 +436,13 @@ function MainApp() {
       setError(null);
       await fetchStars();
     } catch (err) {
-      setError('Failed to create star. Please try again.');
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Create star error:', err);
+        setError('Failed to create star. Please try again.');
+      }
       throw err;
     }
   };
@@ -412,14 +457,26 @@ function MainApp() {
         .eq('id', starId);
 
       if (deleteError) {
+        if (isNetworkError(deleteError)) {
+          setIsConnected(false);
+          setConnectionError('Lost connection to database. Please check your network.');
+          return;
+        }
+        console.error('Delete star error:', deleteError);
         setError('Failed to delete star. Please try again.');
         return;
       }
 
       setSelectedStar(null);
       await fetchStars();
-    } catch {
-      setError('Failed to delete star. Please try again.');
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setIsConnected(false);
+        setConnectionError('Lost connection to database. Please check your network.');
+      } else {
+        console.error('Delete star error:', err);
+        setError('Failed to delete star. Please try again.');
+      }
     }
   };
 
