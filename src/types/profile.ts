@@ -25,4 +25,6 @@ export interface AdminUserView {
   display_name: string | null; // User's display name (nullable if profile incomplete)
   created_at: string; // Timestamp when the user account was created
   is_profile_complete: boolean; // Whether the user has completed their profile
+  is_admin: boolean; // Whether the user is an admin
+  is_super_admin: boolean; // Whether the user is a super admin
 }

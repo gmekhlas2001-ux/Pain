@@ -19,13 +19,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [deletingStar, setDeletingStar] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'stars'>('users');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [promotingUser, setPromotingUser] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      checkSuperAdmin();
       fetchUsers();
       fetchStars();
     }
   }, [isOpen]);
+
+  const checkSuperAdmin = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      setIsSuperAdmin(data?.is_super_admin || false);
+    } catch (err) {
+      console.error('Error checking super admin status:', err);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -109,6 +129,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       setError(error.message || 'Failed to delete star');
     } finally {
       setDeletingStar(null);
+    }
+  };
+
+  const handleToggleAdmin = async (userId: string, makeAdmin: boolean) => {
+    try {
+      setPromotingUser(userId);
+      setError(null);
+
+      const { error: toggleError } = await supabase
+        .rpc('toggle_admin_status', { target_user_id: userId, make_admin: makeAdmin });
+
+      if (toggleError) throw toggleError;
+
+      await fetchUsers();
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to update admin status');
+    } finally {
+      setPromotingUser(null);
+    }
+  };
+
+  const handleToggleSuperAdmin = async (userId: string, makeSuperAdmin: boolean) => {
+    try {
+      setPromotingUser(userId);
+      setError(null);
+
+      const { error: toggleError } = await supabase
+        .rpc('toggle_super_admin_status', { target_user_id: userId, make_super_admin: makeSuperAdmin });
+
+      if (toggleError) throw toggleError;
+
+      await fetchUsers();
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to update super admin status');
+    } finally {
+      setPromotingUser(null);
     }
   };
 
@@ -221,20 +279,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     <th className="pb-3 text-gray-400 font-medium">Email</th>
                     <th className="pb-3 text-gray-400 font-medium">Name</th>
                     <th className="pb-3 text-gray-400 font-medium">Username</th>
-                    <th className="pb-3 text-gray-400 font-medium">Profile Status</th>
+                    <th className="pb-3 text-gray-400 font-medium">Role</th>
+                    <th className="pb-3 text-gray-400 font-medium">Profile</th>
+                    {isSuperAdmin && <th className="pb-3 text-gray-400 font-medium">Manage</th>}
                     <th className="pb-3 text-gray-400 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="py-4 text-center text-gray-400">
+                      <td colSpan={isSuperAdmin ? 7 : 6} className="py-4 text-center text-gray-400">
                         Loading users...
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-4 text-center text-gray-400">
+                      <td colSpan={isSuperAdmin ? 7 : 6} className="py-4 text-center text-gray-400">
                         No users found
                       </td>
                     </tr>
@@ -251,6 +311,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                           {user.username || '-'}
                         </td>
                         <td className="py-4">
+                          <div className="flex gap-1">
+                            {user.is_super_admin && (
+                              <span className="px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                Super Admin
+                              </span>
+                            )}
+                            {user.is_admin && !user.is_super_admin && (
+                              <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                Admin
+                              </span>
+                            )}
+                            {!user.is_admin && !user.is_super_admin && (
+                              <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-400">
+                                User
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4">
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${
                               user.is_profile_complete
@@ -261,6 +340,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                             {user.is_profile_complete ? 'Complete' : 'Incomplete'}
                           </span>
                         </td>
+                        {isSuperAdmin && (
+                          <td className="py-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleToggleSuperAdmin(user.user_id, !user.is_super_admin)}
+                                disabled={promotingUser === user.user_id}
+                                className={`px-2 py-1 rounded text-xs transition-colors ${
+                                  user.is_super_admin
+                                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white'
+                                } ${promotingUser === user.user_id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                title={user.is_super_admin ? 'Remove Super Admin' : 'Make Super Admin'}
+                              >
+                                Super
+                              </button>
+                              <button
+                                onClick={() => handleToggleAdmin(user.user_id, !user.is_admin)}
+                                disabled={promotingUser === user.user_id || user.is_super_admin}
+                                className={`px-2 py-1 rounded text-xs transition-colors ${
+                                  user.is_admin && !user.is_super_admin
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-blue-600 hover:text-white'
+                                } ${promotingUser === user.user_id || user.is_super_admin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                title={user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                              >
+                                Admin
+                              </button>
+                            </div>
+                          </td>
+                        )}
                         <td className="py-4">
                           <button
                             onClick={() => handleDeleteUser(user.user_id)}

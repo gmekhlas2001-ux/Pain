@@ -24,12 +24,29 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number>(0);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchCredits();
+      checkSuperAdmin();
     }
   }, [isOpen, user]);
+
+  const checkSuperAdmin = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      setIsSuperAdmin(data?.is_super_admin || false);
+    } catch (err) {
+      console.error('Error checking super admin status:', err);
+    }
+  };
 
   const fetchCredits = async () => {
     if (!user) return;
@@ -72,7 +89,7 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
         return;
       }
 
-      if (credits < 1) {
+      if (!isSuperAdmin && credits < 1) {
         setError('You need star credits to create a star. Purchase credits in the shop.');
         setIsSubmitting(false);
         return;
@@ -97,11 +114,13 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
         return;
       }
 
-      const deducted = await deductStarCredit(user.id);
-      if (!deducted) {
-        setError('Failed to deduct credit. Please try again.');
-        setIsSubmitting(false);
-        return;
+      if (!isSuperAdmin) {
+        const deducted = await deductStarCredit(user.id);
+        if (!deducted) {
+          setError('Failed to deduct credit. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       await onSubmit(starName.trim(), message.trim());
@@ -142,7 +161,7 @@ export const CreateStarModal: React.FC<CreateStarModalProps> = ({
         <div className="mb-4 flex items-center justify-between p-3 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-700/30">
           <div>
             <p className="text-xs text-gray-400">Your Star Credits</p>
-            <p className="text-xl font-bold text-white">{credits}</p>
+            <p className="text-xl font-bold text-white">{isSuperAdmin ? '∞ Unlimited' : credits}</p>
           </div>
           <button
             type="button"
